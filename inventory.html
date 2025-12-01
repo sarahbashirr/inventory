@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Manager</title>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .controls {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .btn-upload {
+            background-color: #2563eb;
+            color: white;
+        }
+
+        .btn-upload:hover {
+            background-color: #1d4ed8;
+        }
+
+        .btn-sale {
+            background-color: #f59e0b;
+            color: white;
+        }
+
+        .btn-sale:hover {
+            background-color: #d97706;
+        }
+
+        .btn-history {
+            background-color: #8b5cf6;
+            color: white;
+        }
+
+        .btn-history:hover {
+            background-color: #7c3aed;
+        }
+
+        .btn-add {
+            background-color: #16a34a;
+            color: white;
+        }
+
+        .btn-add:hover {
+            background-color: #15803d;
+        }
+
+        .btn-download {
+            background-color: #9333ea;
+            color: white;
+        }
+
+        .btn-download:hover {
+            background-color: #7e22ce;
+        }
+
+        .btn-clear {
+            background-color: #dc2626;
+            color: white;
+        }
+
+        .btn-clear:hover {
+            background-color: #b91c1c;
+        }
+
+        .btn-edit {
+            background-color: #2563eb;
+            color: white;
+            padding: 5px 15px;
+        }
+
+        .btn-save {
+            background-color: #16a34a;
+            color: white;
+            padding: 5px 15px;
+        }
+
+        .btn-delete {
+            background-color: #dc2626;
+            color: white;
+            padding: 5px 15px;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background-color: #f3f4f6;
+        }
+
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #374151;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        tr:hover {
+            background-color: #f9fafb;
+        }
+
+        input[type="text"], input[type="number"], input[type="date"], select, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-family: Arial, sans-serif;
+        }
+
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .empty-state {
+            background: white;
+            padding: 60px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+            color: #6b7280;
+            font-size: 18px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .modal.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-content.large {
+            max-width: 900px;
+        }
+
+        .modal-header {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .btn-cancel {
+            background-color: #6b7280;
+            color: white;
+        }
+
+        .btn-cancel:hover {
+            background-color: #4b5563;
+        }
+
+        .btn-confirm {
+            background-color: #16a34a;
+            color: white;
+        }
+
+        .btn-confirm:hover {
+            background-color: #15803d;
+        }
+
+        /* Custom Select with Search */
+        .custom-select {
+            position: relative;
+        }
+
+        .custom-select input[type="text"] {
+            cursor: pointer;
+        }
+
+        .select-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            margin-top: 4px;
+        }
+
+        .select-dropdown.active {
+            display: block;
+        }
+
+        .select-option {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .select-option:hover {
+            background-color: #f3f4f6;
+        }
+
+        .select-option:last-child {
+            border-bottom: none;
+        }
+
+        /* Summary Stats */
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            border-radius: 8px;
+            color: white;
+        }
+
+        .stat-card.green {
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+        }
+
+        .stat-card.orange {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        .stat-card.red {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        }
+
+        .stat-card.blue {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        }
+
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        /* Filter Section */
+        .filter-section {
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .filter-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            align-items: end;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-group label {
+            font-size: 13px;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 5px;
+        }
+
+        .btn-filter {
+            background-color: #3b82f6;
+            color: white;
+            padding: 8px 16px;
+        }
+
+        .btn-filter:hover {
+            background-color: #2563eb;
+        }
+
+        .btn-reset {
+            background-color: #6b7280;
+            color: white;
+            padding: 8px 16px;
+        }
+
+        .btn-reset:hover {
+            background-color: #4b5563;
+        }
+
+        /* History Styles */
+        .history-item {
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            border-left: 4px solid #f59e0b;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .history-details {
+            font-size: 14px;
+            color: #6b7280;
+            line-height: 1.6;
+        }
+
+        .financial-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .financial-item {
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .financial-item.cost {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .financial-item.revenue {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .financial-item.profit {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .financial-item.percentage {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .financial-item strong {
+            display: block;
+            font-size: 11px;
+            margin-bottom: 2px;
+            opacity: 0.8;
+        }
+
+        .history-notes {
+            margin-top: 8px;
+            padding: 8px;
+            background: white;
+            border-radius: 4px;
+            font-style: italic;
+            color: #4b5563;
+        }
+
+        .no-history {
+            text-align: center;
+            padding: 40px;
+            color: #9ca3af;
+        }
+
+        .price-display {
+            background: #eff6ff;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #1e40af;
+        }
+
+        .price-display strong {
+            color: #1e3a8a;
+        }
+
+        .profit-display {
+            background: #dcfce7;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #166534;
+        }
+
+        .profit-display strong {
+            color: #14532d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Inventory Manager</h1>
+        
+        <div class="controls">
+            <label class="btn-upload">
+                Upload Excel
+                <input type="file" id="fileInput" accept=".xlsx,.xls">
+            </label>
+            <button class="btn-sale" id="saleBtn" style="display: none;">New Sale</button>
+            <button class="btn-history" id="historyBtn" style="display: none;">Sales History</button>
+            <button class="btn-add" id="addBtn" style="display: none;">Add Row</button>
+            <button class="btn-download" id="downloadBtn" style="display: none;">Download Excel</button>
+            <button class="btn-clear" id="clearBtn" style="display: none;">Clear All Data</button>
+            
+            <div class="search-box" id="searchBox" style="display: none;">
+                <input type="text" id="searchInput" placeholder="Search inventory...">
+            </div>
+        </div>
+
+        <div id="tableContainer"></div>
+    </div>
+
+    <!-- Sale Modal -->
+    <div id="saleModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Record New Sale</div>
+            
+            <div class="form-group">
+                <label for="itemSearchInput">Select Item:</label>
+                <div class="custom-select">
+                    <input type="text" id="itemSearchInput" placeholder="Type to search..." autocomplete="off">
+                    <div id="itemDropdown" class="select-dropdown"></div>
+                </div>
+                <div id="priceDisplay" class="price-display" style="display: none;"></div>
+                <div id="profitDisplay" class="profit-display" style="display: none;"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="sizeSelect">Select Size:</label>
+                <select id="sizeSelect">
+                    <option value="">-- Choose size --</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="quantitySold">Quantity Sold:</label>
+                <input type="number" id="quantitySold" min="1" value="1">
+            </div>
+
+            <div class="form-group">
+                <label for="saleNotes">Notes (Optional):</label>
+                <textarea id="saleNotes" placeholder="Add any notes about this sale..."></textarea>
+            </div>
+
+            <div class="modal-buttons">
+                <button class="btn-cancel" id="closeSaleBtn">Cancel</button>
+                <button class="btn-confirm" id="confirmSaleBtn">Confirm Sale</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- History Modal -->
+    <div id="historyModal" class="modal">
+        <div class="modal-content large">
+            <div class="modal-header">Sales History & Analytics</div>
+            
+            <div class="summary-stats">
+                <div class="stat-card red">
+                    <div class="stat-label">Total Cost</div>
+                    <div class="stat-value" id="totalCost">$0</div>
+                </div>
+                <div class="stat-card blue">
+                    <div class="stat-label">Total Revenue</div>
+                    <div class="stat-value" id="totalRevenue">$0</div>
+                </div>
+                <div class="stat-card green">
+                    <div class="stat-label">Total Profit</div>
+                    <div class="stat-value" id="totalProfit">$0</div>
+                </div>
+                <div class="stat-card orange">
+                    <div class="stat-label">Profit Margin</div>
+                    <div class="stat-value" id="profitMargin">0%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Sales</div>
+                    <div class="stat-value" id="totalSales">0</div>
+                </div>
+            </div>
+
+            <div class="filter-section">
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label>Search</label>
+                        <input type="text" id="historySearch" placeholder="Search sales...">
+                    </div>
+                    <div class="filter-group">
+                        <label>From Date</label>
+                        <input type="date" id="dateFrom">
+                    </div>
+                    <div class="filter-group">
+                        <label>To Date</label>
+                        <input type="date" id="dateTo">
+                    </div>
+                    <div class="filter-group">
+                        <button class="btn-filter" id="applyFiltersBtn">Apply Filters</button>
+                    </div>
+                    <div class="filter-group">
+                        <button class="btn-reset" id="resetFiltersBtn">Reset</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="historyContainer"></div>
+            <div class="modal-buttons">
+                <button class="btn-cancel" id="closeHistoryBtn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let data = [];
+        let salesHistory = [];
+        let filteredHistory = [];
+        let editingId = null;
+        let selectedItemId = null;
+        let filteredData = [];
+
+        const fileInput = document.getElementById('fileInput');
+        const addBtn = document.getElementById('addBtn');
+        const saleBtn = document.getElementById('saleBtn');
+        const historyBtn = document.getElementById('historyBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const searchBox = document.getElementById('searchBox');
+        const searchInput = document.getElementById('searchInput');
+        const tableContainer = document.getElementById('tableContainer');
+        const saleModal = document.getElementById('saleModal');
+        const historyModal = document.getElementById('historyModal');
+        const itemSearchInput = document.getElementById('itemSearchInput');
+        const itemDropdown = document.getElementById('itemDropdown');
+        const priceDisplay = document.getElementById('priceDisplay');
+        const profitDisplay = document.getElementById('profitDisplay');
+        const sizeSelect = document.getElementById('sizeSelect');
+        const quantitySold = document.getElementById('quantitySold');
+        const saleNotes = document.getElementById('saleNotes');
+        const historyContainer = document.getElementById('historyContainer');
+        const historySearch = document.getElementById('historySearch');
+        const dateFrom = document.getElementById('dateFrom');
+        const dateTo = document.getElementById('dateTo');
+        
+        // Modal buttons
+        const closeSaleBtn = document.getElementById('closeSaleBtn');
+        const confirmSaleBtn = document.getElementById('confirmSaleBtn');
+        const closeHistoryBtn = document.getElementById('closeHistoryBtn');
+        const applyFiltersBtn = document.getElementById('applyFiltersBtn');
+        const resetFiltersBtn = document.getElementById('resetFiltersBtn');
+
+        // Event Listeners
+        fileInput.addEventListener('change', handleFileUpload);
+        addBtn.addEventListener('click', handleAdd);
+        saleBtn.addEventListener('click', openSaleModal);
+        historyBtn.addEventListener('click', openHistoryModal);
+        downloadBtn.addEventListener('click', handleDownload);
+        clearBtn.addEventListener('click', handleClear);
+        searchInput.addEventListener('input', handleSearch);
+        itemSearchInput.addEventListener('input', handleItemSearch);
+        itemSearchInput.addEventListener('focus', () => handleItemSearch());
+        historySearch.addEventListener('input', applyFilters);
+        quantitySold.addEventListener('input', updateProfitDisplay);
+        
+        // Modal button listeners
+        closeSaleBtn.addEventListener('click', closeSaleModal);
+        confirmSaleBtn.addEventListener('click', confirmSale);
+        closeHistoryBtn.addEventListener('click', closeHistoryModal);
+        applyFiltersBtn.addEventListener('click', applyFilters);
+        resetFiltersBtn.addEventListener('click', resetFilters);
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.custom-select')) {
+                itemDropdown.classList.remove('active');
+            }
+        });
+
+        // Load data from localStorage on page load
+        window.addEventListener('load', () => {
+            const savedData = localStorage.getItem('inventoryData');
+            const savedHistory = localStorage.getItem('salesHistory');
+            
+            if (savedData) {
+                data = JSON.parse(savedData);
+                filteredData = [...data];
+                showButtons();
+                renderTable();
+            }
+            
+            if (savedHistory) {
+                salesHistory = JSON.parse(savedHistory);
+                filteredHistory = [...salesHistory];
+            }
+        });
+
+        function saveToLocalStorage() {
+            localStorage.setItem('inventoryData', JSON.stringify(data));
+            localStorage.setItem('salesHistory', JSON.stringify(salesHistory));
+        }
+
+        function handleFileUpload(e) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = (event) => {
+                const workbook = XLSX.read(event.target.result, { type: 'binary' });
+                const sheetName = workbook.SheetNames[0];
+                const sheet = workbook.Sheets[sheetName];
+                const jsonData = XLSX.utils.sheet_to_json(sheet);
+                
+                data = jsonData.map((row, index) => ({
+                    ...row,
+                    _id: Date.now() + index
+                }));
+                
+                filteredData = [...data];
+                saveToLocalStorage();
+                showButtons();
+                renderTable();
+            };
+            
+            reader.readAsBinaryString(file);
+        }
+
+        function handleDownload() {
+            const exportData = data.map(({ _id, ...rest }) => rest);
+            const worksheet = XLSX.utils.json_to_sheet(exportData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Inventory');
+            XLSX.writeFile(workbook, 'inventory.xlsx');
+        }
+
+        function handleAdd() {
+            const columns = data.length > 0 ? Object.keys(data[0]).filter(key => key !== '_id') : [];
+            const newRow = { _id: Date.now() };
+            columns.forEach(col => newRow[col] = '');
+            data.push(newRow);
+            filteredData = [...data];
+            editingId = newRow._id;
+            saveToLocalStorage();
+            renderTable();
+        }
+
+        function handleEdit(id) {
+            editingId = id;
+            renderTable();
+        }
+
+        function handleSave() {
+            editingId = null;
+            saveToLocalStorage();
+            renderTable();
+        }
+
+        function handleDelete(id) {
+            data = data.filter(row => row._id !== id);
+            filteredData = [...data];
+            saveToLocalStorage();
+            renderTable();
+        }
+
+        function handleClear() {
+            if (confirm('Are you sure you want to clear all data? This cannot be undone.')) {
+                data = [];
+                filteredData = [];
+                salesHistory = [];
+                filteredHistory = [];
+                localStorage.removeItem('inventoryData');
+                localStorage.removeItem('salesHistory');
+                hideButtons();
+                renderTable();
+            }
+        }
+
+        function handleSearch() {
+            const query = searchInput.value.toLowerCase();
+            
+            if (!query) {
+                filteredData = [...data];
+            } else {
+                filteredData = data.filter(row => {
+                    return Object.values(row).some(value => 
+                        String(value).toLowerCase().includes(query)
+                    );
+                });
+            }
+            
+            renderTable();
+        }
+
+        function handleItemSearch() {
+            const query = itemSearchInput.value.toLowerCase();
+            itemDropdown.innerHTML = '';
+            
+            const filtered = data.filter(row => {
+                const item = (row['item'] || '').toLowerCase();
+                const color = (row['color'] || '').toLowerCase();
+                const supplier = (row['supplier'] || '').toLowerCase();
+                return item.includes(query) || color.includes(query) || supplier.includes(query);
+            });
+            
+            if (filtered.length === 0) {
+                itemDropdown.innerHTML = '<div class="select-option" style="color: #9ca3af;">No items found</div>';
+            } else {
+                filtered.forEach(row => {
+                    const itemName = row['item'] || 'Unknown';
+                    const color = row['color'] || 'N/A';
+                    const supplier = row['supplier'] || 'N/A';
+                    
+                    const option = document.createElement('div');
+                    option.className = 'select-option';
+                    option.textContent = `${itemName} - ${color} - ${supplier}`;
+                    option.onclick = () => selectItem(row._id, `${itemName} - ${color} - ${supplier}`);
+                    itemDropdown.appendChild(option);
+                });
+            }
+            
+            itemDropdown.classList.add('active');
+        }
+
+        function selectItem(id, displayText) {
+            selectedItemId = id;
+            itemSearchInput.value = displayText;
+            itemDropdown.classList.remove('active');
+            updateProfitDisplay();
+            updateSizeOptions();
+        }
+
+        function updateProfitDisplay() {
+            if (!selectedItemId) return;
+            
+            const item = data.find(row => row._id === selectedItemId);
+            if (!item) return;
+            
+            const sellingPrice = parseFloat(item['selling price'] || item['Price'] || 0);
+            const cost = parseFloat(item['cost'] || item['Cost'] || 0);
+            const quantity = parseInt(quantitySold.value) || 1;
+            
+            const profitPerItem = sellingPrice - cost;
+            const totalProfit = profitPerItem * quantity;
+            const totalRevenue = sellingPrice * quantity;
+            const totalCost = cost * quantity;
+            const profitPercentage = totalCost > 0 ? ((totalProfit / totalCost) * 100).toFixed(2) : 0;
+            
+            if (sellingPrice > 0) {
+                priceDisplay.style.display = 'block';
+                priceDisplay.innerHTML = `<strong>Selling Price:</strong> $${sellingPrice.toFixed(2)} | <strong>Cost:</strong> $${cost.toFixed(2)}`;
+            } else {
+                priceDisplay.style.display = 'none';
+            }
+            
+            if (totalProfit !== 0) {
+                profitDisplay.style.display = 'block';
+                profitDisplay.innerHTML = `
+                    <strong>For ${quantity} item(s):</strong><br>
+                    Revenue: $${totalRevenue.toFixed(2)} | Cost: $${totalCost.toFixed(2)} | 
+                    Profit: $${totalProfit.toFixed(2)} (${profitPercentage}% margin)
+                `;
+            } else {
+                profitDisplay.style.display = 'none';
+            }
+        }
+
+        function handleCellChange(id, column, value) {
+            data = data.map(row => 
+                row._id === id ? { ...row, [column]: value } : row
+            );
+            filteredData = [...data];
+        }
+
+        function showButtons() {
+            addBtn.style.display = 'block';
+            saleBtn.style.display = 'block';
+            historyBtn.style.display = 'block';
+            downloadBtn.style.display = 'block';
+            clearBtn.style.display = 'block';
+            searchBox.style.display = 'block';
+        }
+
+        function hideButtons() {
+            addBtn.style.display = 'none';
+            saleBtn.style.display = 'none';
+            historyBtn.style.display = 'none';
+            downloadBtn.style.display = 'none';
+            clearBtn.style.display = 'none';
+            searchBox.style.display = 'none';
+        }
+
+        function openSaleModal() {
+            selectedItemId = null;
+            itemSearchInput.value = '';
+            itemDropdown.innerHTML = '';
+            priceDisplay.style.display = 'none';
+            profitDisplay.style.display = 'none';
+            sizeSelect.innerHTML = '<option value="">-- Choose size --</option>';
+            quantitySold.value = 1;
+            saleNotes.value = '';
+            handleItemSearch();
+            saleModal.classList.add('active');
+        }
+
+        function updateSizeOptions() {
+    if (!selectedItemId) {
+        sizeSelect.innerHTML = '<option value="">-- Choose size --</option>';
+        return;
+    }
+
+    const item = data.find(row => row._id === selectedItemId);
+    if (!item) return;
+
+    sizeSelect.innerHTML = '<option value="">-- Choose size --</option>';
+
+    // Check all possible column name variations
+    const sizeKeys = Object.keys(item).filter(key => key.toLowerCase().includes('size')).sort();
+    const quantityKeys = Object.keys(item).filter(key => key.toLowerCase().includes('quantity') || key.toLowerCase() === 'qty').sort();
+
+    console.log('Size keys found:', sizeKeys);
+    console.log('Quantity keys found:', quantityKeys);
+
+    // Loop through ALL size/quantity pairs
+    const pairCount = Math.min(sizeKeys.length, quantityKeys.length);
+    
+    for (let i = 0; i < pairCount; i++) {
+        const sizeKey = sizeKeys[i];
+        const qtyKey = quantityKeys[i];
+        
+        if (item[sizeKey] && item[qtyKey] != null && item[qtyKey] !== '') {
+            const qty = parseInt(item[qtyKey]) || 0;
+            const option = document.createElement('option');
+            option.value = `size_${i}`;
+            option.textContent = `Size ${item[sizeKey]} (Stock: ${qty})`;
+            option.dataset.sizeKey = sizeKey;
+            option.dataset.qtyKey = qtyKey;
+            sizeSelect.appendChild(option);
+        }
+    }
+
+    // If no sizes found, show message
+    if (sizeSelect.options.length === 1) {
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = 'No sizes available for this item';
+        option.disabled = true;
+        sizeSelect.appendChild(option);
+    }
+}
+
+        function closeSaleModal() {
+            saleModal.classList.remove('active');
+        }
+
+        function confirmSale() {
+            const selectedOption = sizeSelect.options[sizeSelect.selectedIndex];
+            const selectedSize = sizeSelect.value;
+            const quantity = parseInt(quantitySold.value);
+            const notes = saleNotes.value.trim();
+            
+            if (!selectedItemId) {
+                alert('Please select an item');
+                return;
+            }
+
+            if (!selectedSize) {
+                alert('Please select a size');
+                return;
+            }
+            
+            if (!quantity || quantity < 1) {
+                alert('Please enter a valid quantity');
+                return;
+            }
+            
+            const item = data.find(row => row._id === selectedItemId);
+            if (item) {
+                const sizeKey = selectedOption.dataset.sizeKey;
+                const qtyKey = selectedOption.dataset.qtyKey;
+                const currentQty = parseInt(item[qtyKey]) || 0;
+                
+                if (currentQty < quantity) {
+                    alert('Not enough stock! Current quantity: ' + currentQty);
+                    return;
+                }
+                
+                // Get prices and calculate
+                const sellingPrice = parseFloat(item['selling price'] || item['Price'] || 0);
+                const cost = parseFloat(item['cost'] || item['Cost'] || 0);
+                const totalRevenue = sellingPrice * quantity;
+                const totalCost = cost * quantity;
+                const profit = totalRevenue - totalCost;
+                const profitPercentage = totalCost > 0 ? ((profit / totalCost) * 100).toFixed(2) : 0;
+                
+                // Update quantity
+                data = data.map(row => {
+                    if (row._id === selectedItemId) {
+                        return { ...row, [qtyKey]: currentQty - quantity };
+                    }
+                    return row;
+                });
+                
+                // Add to sales history
+                const saleRecord = {
+                    id: Date.now(),
+                    date: new Date().toISOString(),
+                    dateDisplay: new Date().toLocaleString(),
+                    item: item['item'] || 'Unknown',
+                    color: item['color'] || 'N/A',
+                    supplier: item['supplier'] || 'N/A',
+                    size: item[sizeKey] || 'N/A',
+                    quantity: quantity,
+                    sellingPrice: sellingPrice,
+                    cost: cost,
+                    revenue: totalRevenue,
+                    totalCost: totalCost,
+                    profit: profit,
+                    profitPercentage: profitPercentage,
+                    notes: notes
+                };
+                
+                salesHistory.unshift(saleRecord);
+                filteredHistory = [...salesHistory];
+                
+                filteredData = [...data];
+                saveToLocalStorage();
+                renderTable();
+                closeSaleModal();
+                
+                alert(`Sale recorded successfully!\nRevenue: $${totalRevenue.toFixed(2)}\nCost: $${totalCost.toFixed(2)}\nProfit: $${profit.toFixed(2)} (${profitPercentage}%)`);
+            }
+        }
+
+        function applyFilters() {
+            const searchQuery = historySearch.value.toLowerCase();
+            const fromDate = dateFrom.value ? new Date(dateFrom.value) : null;
+            const toDate = dateTo.value ? new Date(dateTo.value) : null;
+            
+            filteredHistory = salesHistory.filter(sale => {
+                // Search filter
+                const matchesSearch = !searchQuery || 
+                    (sale.item && sale.item.toLowerCase().includes(searchQuery)) ||
+                    (sale.color && sale.color.toLowerCase().includes(searchQuery)) ||
+                    (sale.supplier && sale.supplier.toLowerCase().includes(searchQuery)) ||
+                    (sale.size && sale.size.toLowerCase().includes(searchQuery));
+                
+                // Date filter
+                const saleDate = new Date(sale.date);
+                const matchesFromDate = !fromDate || saleDate >= fromDate;
+                const matchesToDate = !toDate || saleDate <= new Date(toDate.getTime() + 86400000); // Add 1 day
+                
+                return matchesSearch && matchesFromDate && matchesToDate;
+            });
+            
+            renderHistory();
+        }
+
+        function resetFilters() {
+            historySearch.value = '';
+            dateFrom.value = '';
+            dateTo.value = '';
+            filteredHistory = [...salesHistory];
+            renderHistory();
+        }
+
+        function openHistoryModal() {
+            filteredHistory = [...salesHistory];
+            renderHistory();
+            historyModal.classList.add('active');
+        }
+
+        function closeHistoryModal() {
+            historyModal.classList.remove('active');
+        }
+
+        function renderHistory() {
+            // Calculate totals from filtered history with safety checks
+            const totalCost = filteredHistory.reduce((sum, sale) => sum + (parseFloat(sale.totalCost) || 0), 0);
+            const totalRevenue = filteredHistory.reduce((sum, sale) => sum + (parseFloat(sale.revenue) || 0), 0);
+            const totalProfit = filteredHistory.reduce((sum, sale) => sum + (parseFloat(sale.profit) || 0), 0);
+            const profitMargin = totalCost > 0 ? ((totalProfit / totalCost) * 100).toFixed(2) : 0;
+            const totalSales = filteredHistory.length;
+            
+            document.getElementById('totalCost').textContent = `$${totalCost.toFixed(2)}`;
+            document.getElementById('totalRevenue').textContent = `$${totalRevenue.toFixed(2)}`;
+            document.getElementById('totalProfit').textContent = `$${totalProfit.toFixed(2)}`;
+            document.getElementById('profitMargin').textContent = `${profitMargin}%`;
+            document.getElementById('totalSales').textContent = totalSales;
+            
+            if (filteredHistory.length === 0) {
+                historyContainer.innerHTML = '<div class="no-history">No sales found</div>';
+                return;
+            }
+
+            let html = '';
+            filteredHistory.forEach(sale => {
+                // Safety checks for all values
+                const saleCost = parseFloat(sale.totalCost) || 0;
+                const saleRevenue = parseFloat(sale.revenue) || 0;
+                const saleProfit = parseFloat(sale.profit) || 0;
+                const salePercentage = parseFloat(sale.profitPercentage) || 0;
+                
+                html += `
+                    <div class="history-item">
+                        <div class="history-header">
+                            <span>${sale.item || 'Unknown'} - ${sale.color || 'N/A'}</span>
+                            <span>${sale.dateDisplay || 'N/A'}</span>
+                        </div>
+                        <div class="history-details">
+                            <strong>Supplier:</strong> ${sale.supplier || 'N/A'}<br>
+                            <strong>Size:</strong> ${sale.size || 'N/A'}<br>
+                            <strong>Quantity:</strong> ${sale.quantity || 0}
+                        </div>
+                        <div class="financial-summary">
+                            <div class="financial-item cost">
+                                <strong>TOTAL COST</strong>
+                                $${saleCost.toFixed(2)}
+                            </div>
+                            <div class="financial-item revenue">
+                                <strong>REVENUE</strong>
+                                $${saleRevenue.toFixed(2)}
+                            </div>
+                            <div class="financial-item profit">
+                                <strong>PROFIT</strong>
+                                $${saleProfit.toFixed(2)}
+                            </div>
+                            <div class="financial-item percentage">
+                                <strong>MARGIN</strong>
+                                ${salePercentage.toFixed(2)}%
+                            </div>
+                        </div>
+                        ${sale.notes ? `<div class="history-notes">"${sale.notes}"</div>` : ''}
+                    </div>
+                `;
+            });
+            
+            historyContainer.innerHTML = html;
+        }
+
+        function renderTable() {
+            if (filteredData.length === 0 && data.length > 0) {
+                tableContainer.innerHTML = '<div class="empty-state">No items match your search</div>';
+                return;
+            }
+
+            if (data.length === 0) {
+                tableContainer.innerHTML = '<div class="empty-state">Upload an Excel file to get started</div>';
+                return;
+            }
+
+            const columns = Object.keys(data[0]).filter(key => key !== '_id');
+            
+            let html = '<div class="table-container"><table><thead><tr>';
+            
+            columns.forEach(col => {
+                html += `<th>${col}</th>`;
+            });
+            html += '<th>Actions</th></tr></thead><tbody>';
+            
+            filteredData.forEach(row => {
+                html += '<tr>';
+                columns.forEach(col => {
+                    if (editingId === row._id) {
+                        html += `<td><input type="text" value="${row[col] || ''}" onchange="handleCellChange(${row._id}, '${col}', this.value)"></td>`;
+                    } else {
+                        html += `<td>${row[col] || ''}</td>`;
+                    }
+                });
+                
+                html += '<td><div class="actions">';
+                if (editingId === row._id) {
+                    html += `<button class="btn-save" onclick="handleSave()">Save</button>`;
+                } else {
+                    html += `<button class="btn-edit" onclick="handleEdit(${row._id})">Edit</button>`;
+                }
+                html += `<button class="btn-delete" onclick="handleDelete(${row._id})">Delete</button>`;
+                html += '</div></td></tr>';
+            });
+            
+            html += '</tbody></table></div>';
+            tableContainer.innerHTML = html;
+        }
+
+        renderTable();
+    </script>
+</body>
+</html>
